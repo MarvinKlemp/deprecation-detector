@@ -94,6 +94,7 @@ class DetectorFactory
             ->exclude('Tests')
             ->exclude('Test');
 
+        $ruleSetAstMapGenerator = new AstMapGenerator();
         $ruleSetProgressOutput = new VerboseProgressOutput(
             new ProgressBar($output),
             $configuration->isVerbose(),
@@ -109,7 +110,10 @@ class DetectorFactory
             ->exclude('vendor')
             ->exclude('Tests')
             ->exclude('Test');
-        $deprecationDirectoryTraverser = new DirectoryTraverser($ruleSetDeprecationFinder);
+        $deprecationDirectoryTraverser = new DirectoryTraverser(
+            $ruleSetAstMapGenerator,
+            $ruleSetDeprecationParser
+        );
 
         $violationDetector = $this->getViolationDetector($configuration);
 
@@ -119,10 +123,8 @@ class DetectorFactory
 
         $progressOutput = new DefaultProgressOutput($output, new Stopwatch());
 
-        $astMapGenerator = new AstMapGenerator();
-
         return new DeprecationDetector(
-            $astMapGenerator,
+            $ruleSetAstMapGenerator, // does the detector really need the generator?
             $ruleSetLoader,
             $deprecationUsageFinder,
             $violationDetector,

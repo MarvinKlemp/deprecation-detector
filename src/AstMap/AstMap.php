@@ -41,5 +41,4 @@ class AstMap
 
         return $this->astMapFiles[$file->getPathname()];
     }
-
 }

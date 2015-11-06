@@ -81,11 +81,11 @@ class DeprecationDetector
         $this->output->startRuleSetGeneration();
 
         // start RuleSetAstMapGeneration
-        $map = $this->astMapGenerator->generateAstMap($sourceArg);
-        // end RuleSetAstMapGeneration
-
         $ruleSet = $this->ruleSetLoader->loadRuleSet($ruleSetArg);
         $this->output->endRuleSetGeneration();
+        // end RuleSetAstMapGeneration
+
+
 
         $this->output->startUsageDetection();
 

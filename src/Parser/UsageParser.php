@@ -61,10 +61,11 @@ class UsageParser extends Parser implements ParserInterface
 
     /**
      * @param PhpFileInfo $phpFileInfo
+     * @param Node[]      $code
      *
      * @return PhpFileInfo
      */
-    public function parseFile(PhpFileInfo $phpFileInfo)
+    public function parseFile(PhpFileInfo $phpFileInfo, $code)
     {
         $nodes = $this->parse($phpFileInfo->getContents());
         $nodes = $this->nameResolver->traverse($nodes);

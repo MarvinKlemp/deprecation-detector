@@ -2,27 +2,31 @@
 
 namespace SensioLabs\DeprecationDetector\RuleSet;
 
+use SensioLabs\DeprecationDetector\AstMap\AstMapFile;
+use SensioLabs\DeprecationDetector\AstMap\AstMapGenerator;
 use SensioLabs\DeprecationDetector\FileInfo\PhpFileInfo;
-use SensioLabs\DeprecationDetector\Finder\ParsedPhpFileFinder;
+use SensioLabs\DeprecationDetector\Parser\DeprecationParser;
 
-/**
- * Class Traverser.
- *
- * @author Christopher Hertel <christopher.hertel@sensiolabs.de>
- */
 class DirectoryTraverser
 {
     /**
-     * @var ParsedPhpFileFinder
+     * @var AstMapGenerator
      */
-    private $finder;
+    private $astMapGenerator;
 
     /**
-     * @param ParsedPhpFileFinder $finder
+     * @var DeprecationParser
      */
-    public function __construct(ParsedPhpFileFinder $finder)
+    private $deprecationParser;
+
+    /**
+     * @param AstMapGenerator $astMapGenerator
+     * @param DeprecationParser $deprecationParser
+     */
+    public function __construct(AstMapGenerator $astMapGenerator, DeprecationParser $deprecationParser)
     {
-        $this->finder = $finder;
+        $this->astMapGenerator = $astMapGenerator;
+        $this->deprecationParser = $deprecationParser;
     }
 
     /**
@@ -33,16 +37,20 @@ class DirectoryTraverser
      */
     public function traverse($path, RuleSet $ruleSet = null)
     {
-        $files = $this->finder->in($path);
+        $astMap = $this->astMapGenerator->generateAstMap($path);
 
         if (!$ruleSet instanceof RuleSet) {
             $ruleSet = new RuleSet();
         }
 
-        foreach ($files as $i => $file) {
-            /** @var PhpFileInfo $file */
-            if ($file->hasDeprecations()) {
-                $ruleSet->merge($file);
+        /** @var AstMapFile $astMapFile */
+        foreach ($astMap->getAsts() as $astMapFile) {
+            $phpFileInfo = PhpFileInfo::create($astMapFile->file());
+
+            $this->deprecationParser->parseFile($phpFileInfo, $astMapFile->code());
+
+            if ($phpFileInfo->hasDeprecations()) {
+                $ruleSet->merge($phpFileInfo);
             }
         }
 
