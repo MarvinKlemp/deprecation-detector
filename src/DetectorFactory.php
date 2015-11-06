@@ -69,11 +69,6 @@ class DetectorFactory
     private $symbolTable;
 
     /**
-     * @var AncestorResolver
-     */
-    private $ancestorResolver;
-
-    /**
      * @param Configuration   $configuration
      * @param OutputInterface $output
      *
@@ -97,8 +92,6 @@ class DetectorFactory
             ->exclude('vendor')
             ->exclude('Tests')
             ->exclude('Test');
-
-        $this->ancestorResolver = new AncestorResolver($deprecationUsageParser, $deprecationUsageFinder);
 
         $ruleSetProgressOutput = new VerboseProgressOutput(
             new ProgressBar($output),
@@ -127,7 +120,6 @@ class DetectorFactory
 
         return new DeprecationDetector(
             $ruleSetLoader,
-            $this->ancestorResolver,
             $deprecationUsageFinder,
             $violationDetector,
             $renderer,
@@ -249,10 +241,10 @@ class DetectorFactory
             array(
                 new ClassViolationChecker(),
                 new InterfaceViolationChecker(),
-                new MethodViolationChecker($this->ancestorResolver),
+                new MethodViolationChecker(),
                 new SuperTypeViolationChecker(),
                 new TypeHintViolationChecker(),
-                new MethodDefinitionViolationChecker($this->ancestorResolver),
+                new MethodDefinitionViolationChecker(),
             )
         );
 

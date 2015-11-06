@@ -51,10 +51,7 @@ class MethodViolationCheckerTest extends \PHPUnit_Framework_TestCase
 
         $ruleSet->getMethod('deprecatedMethod', 'class')->willReturn($methodDeprecation->reveal());
 
-        $ancestorResolver = $this->prophesize('SensioLabs\DeprecationDetector\TypeGuessing\AncestorResolver');
-        $ancestorResolver->getClassAncestors($phpFileInfo, 'class')->willReturn(array());
-
-        $checker = new MethodViolationChecker($ancestorResolver->reveal());
+        $checker = new MethodViolationChecker();
 
         $this->assertEquals(
             array(new Violation($deprecatedMethodUsage, $phpFileInfo, $deprecationComment)),

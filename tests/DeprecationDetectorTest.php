@@ -10,7 +10,6 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
     public function testClassIsInitializable()
     {
         $ruleSetLoader = $this->prophesize('SensioLabs\DeprecationDetector\RuleSet\Loader\LoaderInterface');
-        $ancestorResolver = $this->prophesize('SensioLabs\DeprecationDetector\TypeGuessing\AncestorResolver');
         $deprecationFinder = $this->prophesize('SensioLabs\DeprecationDetector\Finder\ParsedPhpFileFinder');
         $violationDetector = $this->prophesize('SensioLabs\DeprecationDetector\Violation\ViolationDetector');
         $renderer = $this->prophesize('SensioLabs\DeprecationDetector\Violation\Renderer\RendererInterface');
@@ -20,7 +19,6 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
 
         $detector = new DeprecationDetector(
             $ruleSetLoader->reveal(),
-            $ancestorResolver->reveal(),
             $deprecationFinder->reveal(),
             $violationDetector->reveal(),
             $renderer->reveal(),
@@ -40,9 +38,6 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
         $ruleSet = $this->prophesize('SensioLabs\DeprecationDetector\RuleSet\RuleSet');
         $ruleSetLoader = $this->prophesize('SensioLabs\DeprecationDetector\RuleSet\Loader\LoaderInterface');
         $ruleSetLoader->loadRuleSet($ruleSetArg)->willReturn($ruleSet->reveal());
-
-        $ancestorResolver = $this->prophesize('SensioLabs\DeprecationDetector\TypeGuessing\AncestorResolver');
-        $ancestorResolver->setSourcePaths(Argument::any())->shouldBeCalled();
 
         $deprecationFinder = $this->prophesize('SensioLabs\DeprecationDetector\Finder\ParsedPhpFileFinder');
         $deprecationFinder->in($sourceArg)->willReturn($deprecationFinder->reveal());
@@ -77,7 +72,6 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
 
         $detector = new DeprecationDetector(
             $ruleSetLoader->reveal(),
-            $ancestorResolver->reveal(),
             $deprecationFinder->reveal(),
             $violationDetector->reveal(),
             $renderer->reveal(),
@@ -98,9 +92,6 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
         $ruleSet = $this->prophesize('SensioLabs\DeprecationDetector\RuleSet\RuleSet');
         $ruleSetLoader = $this->prophesize('SensioLabs\DeprecationDetector\RuleSet\Loader\LoaderInterface');
         $ruleSetLoader->loadRuleSet($ruleSetArg)->willReturn($ruleSet->reveal());
-
-        $ancestorResolver = $this->prophesize('SensioLabs\DeprecationDetector\TypeGuessing\AncestorResolver');
-        $ancestorResolver->setSourcePaths(Argument::any())->shouldBeCalled();
 
         $deprecationFinder = $this->prophesize('SensioLabs\DeprecationDetector\Finder\ParsedPhpFileFinder');
         $deprecationFinder->in($sourceArg)->willReturn($deprecationFinder->reveal());
@@ -136,7 +127,6 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
 
         $detector = new DeprecationDetector(
             $ruleSetLoader->reveal(),
-            $ancestorResolver->reveal(),
             $deprecationFinder->reveal(),
             $violationDetector->reveal(),
             $renderer->reveal(),
