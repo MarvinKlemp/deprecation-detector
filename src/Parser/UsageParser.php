@@ -5,6 +5,7 @@ namespace SensioLabs\DeprecationDetector\Parser;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
 use PhpParser\Parser;
+use SensioLabs\DeprecationDetector\AstMap\AstMapFile;
 use SensioLabs\DeprecationDetector\FileInfo\PhpFileInfo;
 use SensioLabs\DeprecationDetector\Visitor\StaticAnalysisVisitorInterface;
 use SensioLabs\DeprecationDetector\Visitor\ViolationVisitorInterface;
@@ -14,7 +15,7 @@ class UsageParser extends Parser implements ParserInterface
     /**
      * @var NodeTraverser
      */
-    protected $nameResolver;
+    protected $baseTraverser;
 
     /**
      * @var NodeTraverser
@@ -46,7 +47,7 @@ class UsageParser extends Parser implements ParserInterface
         NodeTraverser $violationTraverser
     ) {
         parent::__construct(new Lexer());
-        $this->nameResolver = $baseTraverser;
+        $this->baseTraverser = $baseTraverser;
         $this->staticTraverser = $staticTraverser;
         foreach ($staticAnalysisVisitors as $visitor) {
             $this->staticTraverser->addVisitor($visitor);
@@ -61,21 +62,21 @@ class UsageParser extends Parser implements ParserInterface
 
     /**
      * @param PhpFileInfo $phpFileInfo
-     * @param Node[]      $code
+     * @param AstMapFile  $astMapFile
      *
      * @return PhpFileInfo
      */
-    public function parseFile(PhpFileInfo $phpFileInfo, $code)
+    public function parseFile(PhpFileInfo $phpFileInfo, AstMapFile $astMapFile)
     {
-        $nodes = $this->parse($phpFileInfo->getContents());
-        $nodes = $this->nameResolver->traverse($nodes);
-        $nodes = $this->staticTraverser->traverse($nodes);
+        $code = $this->baseTraverser->traverse($astMapFile->code());
+        $code = $this->staticTraverser->traverse($code);
+        $astMapFile->updateCode($code);
 
         foreach ($this->violationVisitors as $visitor) {
             $visitor->setPhpFileInfo($phpFileInfo);
         }
 
-        $this->violationTraverser->traverse($nodes);
+        $this->violationTraverser->traverse($code);
 
         return $phpFileInfo;
     }

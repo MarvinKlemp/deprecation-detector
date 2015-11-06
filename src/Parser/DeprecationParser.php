@@ -4,6 +4,7 @@ namespace SensioLabs\DeprecationDetector\Parser;
 
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
+use SensioLabs\DeprecationDetector\AstMap\AstMapFile;
 use SensioLabs\DeprecationDetector\FileInfo\PhpFileInfo;
 use SensioLabs\DeprecationDetector\Visitor\DeprecationVisitorInterface;
 use \PhpParser\Node;
@@ -36,18 +37,17 @@ class DeprecationParser implements ParserInterface
 
     /**
      * @param PhpFileInfo $phpFileInfo
-     * @param Node[]      $code
+     * @param AstMapFile  $astMapFile
      *
      * @return PhpFileInfo
      */
-    public function parseFile(PhpFileInfo $phpFileInfo, $code)
+    public function parseFile(PhpFileInfo $phpFileInfo, AstMapFile $astMapFile)
     {
         foreach ($this->deprecationVisitors as $visitor) {
             $visitor->setPhpFileInfo($phpFileInfo);
         }
 
-        /** @TODO possible risks because traverse may change the AST */
-        $this->traverser->traverse($code);
+        $this->traverser->traverse($astMapFile->code());
 
         return $phpFileInfo;
     }

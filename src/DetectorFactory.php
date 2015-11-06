@@ -3,11 +3,11 @@
 namespace SensioLabs\DeprecationDetector;
 
 use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitor\NameResolver;
 use SensioLabs\DeprecationDetector\AstMap\AstMapGenerator;
 use SensioLabs\DeprecationDetector\Configuration\Configuration;
 use SensioLabs\DeprecationDetector\Console\Output\DefaultProgressOutput;
 use SensioLabs\DeprecationDetector\Console\Output\VerboseProgressOutput;
+use SensioLabs\DeprecationDetector\Finder\DeprecationUsageFinder;
 use SensioLabs\DeprecationDetector\Finder\ParsedPhpFileFinder;
 use SensioLabs\DeprecationDetector\Parser\DeprecationParser;
 use SensioLabs\DeprecationDetector\Parser\UsageParser;
@@ -17,7 +17,6 @@ use SensioLabs\DeprecationDetector\RuleSet\Loader\DirectoryLoader;
 use SensioLabs\DeprecationDetector\RuleSet\Loader\FileLoader;
 use SensioLabs\DeprecationDetector\RuleSet\Loader\LoaderInterface;
 use SensioLabs\DeprecationDetector\RuleSet\DirectoryTraverser;
-use SensioLabs\DeprecationDetector\TypeGuessing\AncestorResolver;
 use SensioLabs\DeprecationDetector\TypeGuessing\ConstructorResolver\ConstructorResolver;
 use SensioLabs\DeprecationDetector\TypeGuessing\ConstructorResolver\Visitor\ConstructorResolverVisitor;
 use SensioLabs\DeprecationDetector\TypeGuessing\SymbolTable\ComposedResolver;
@@ -78,6 +77,8 @@ class DetectorFactory
     public function create(Configuration $configuration, OutputInterface $output)
     {
         $this->symbolTable = new SymbolTable();
+        $ruleSetAstMapGenerator = new AstMapGenerator();
+        $violationAstMapGenerator = new AstMapGenerator();
 
         $deprecationProgressOutput = new VerboseProgressOutput(
             new ProgressBar($output),
@@ -85,31 +86,17 @@ class DetectorFactory
             'Deprecation detection'
         );
         $deprecationUsageParser = $this->getUsageParser($configuration);
-        $deprecationUsageFinder = new ParsedPhpFileFinder(
-            $deprecationUsageParser,
-            $deprecationProgressOutput
+        $deprecationUsageFinder = new DeprecationUsageFinder(
+            $violationAstMapGenerator,
+            $deprecationUsageParser
         );
-        $deprecationUsageFinder
-            ->exclude('vendor')
-            ->exclude('Tests')
-            ->exclude('Test');
 
-        $ruleSetAstMapGenerator = new AstMapGenerator();
         $ruleSetProgressOutput = new VerboseProgressOutput(
             new ProgressBar($output),
             $configuration->isVerbose(),
             'RuleSet generation'
         );
         $ruleSetDeprecationParser = $this->getDeprecationParser();
-        $ruleSetDeprecationFinder = new ParsedPhpFileFinder(
-            $ruleSetDeprecationParser,
-            $ruleSetProgressOutput
-        );
-        $ruleSetDeprecationFinder
-            ->contains('@deprecated')
-            ->exclude('vendor')
-            ->exclude('Tests')
-            ->exclude('Test');
         $deprecationDirectoryTraverser = new DirectoryTraverser(
             $ruleSetAstMapGenerator,
             $ruleSetDeprecationParser
@@ -124,7 +111,6 @@ class DetectorFactory
         $progressOutput = new DefaultProgressOutput($output, new Stopwatch());
 
         return new DeprecationDetector(
-            $ruleSetAstMapGenerator, // does the detector really need the generator?
             $ruleSetLoader,
             $deprecationUsageFinder,
             $violationDetector,
@@ -147,7 +133,7 @@ class DetectorFactory
         return new UsageParser(
             $this->getStaticAnalysisVisitors($configuration),
             $this->getViolationVisitors(),
-            $this->getBaseTraverser(),
+            new NodeTraverser(),
             new NodeTraverser(),
             new NodeTraverser()
         );
@@ -309,7 +295,7 @@ class DetectorFactory
             array(
                 new FindDeprecatedTagsVisitor(),
             ),
-            $this->getBaseTraverser()
+            new NodeTraverser()
         );
     }
 
@@ -342,16 +328,5 @@ class DetectorFactory
         }
 
         return $loader;
-    }
-
-    /**
-     * @return NodeTraverser
-     */
-    private function getBaseTraverser()
-    {
-        $baseTraverser = new NodeTraverser();
-        $baseTraverser->addVisitor(new NameResolver());
-
-        return $baseTraverser;
     }
 }

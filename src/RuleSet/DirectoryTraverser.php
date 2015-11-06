@@ -47,7 +47,7 @@ class DirectoryTraverser
         foreach ($astMap->getAsts() as $astMapFile) {
             $phpFileInfo = PhpFileInfo::create($astMapFile->file());
 
-            $this->deprecationParser->parseFile($phpFileInfo, $astMapFile->code());
+            $this->deprecationParser->parseFile($phpFileInfo, $astMapFile);
 
             if ($phpFileInfo->hasDeprecations()) {
                 $ruleSet->merge($phpFileInfo);

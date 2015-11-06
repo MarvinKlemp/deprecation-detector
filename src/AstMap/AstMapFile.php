@@ -2,6 +2,7 @@
 
 namespace SensioLabs\DeprecationDetector\AstMap;
 
+use PhpParser\Node;
 use SplFileInfo;
 
 class AstMapFile
@@ -18,11 +19,19 @@ class AstMapFile
 
     /**
      * @param SplFileInfo $file
-     * @param string $code
+     * @param Node[]      $code
      */
     public function __construct(SplFileInfo $file, $code)
     {
         $this->file = $file;
+        $this->code = $code;
+    }
+
+    /**
+     * @param Node[] $code
+     */
+    public function updateCode($code)
+    {
         $this->code = $code;
     }
 

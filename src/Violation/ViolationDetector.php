@@ -2,11 +2,11 @@
 
 namespace SensioLabs\DeprecationDetector\Violation;
 
-use SensioLabs\DeprecationDetector\Finder\ParsedPhpFileFinder;
 use SensioLabs\DeprecationDetector\RuleSet\RuleSet;
 use SensioLabs\DeprecationDetector\Violation\Violation as BaseViolation;
 use SensioLabs\DeprecationDetector\Violation\ViolationChecker\ViolationCheckerInterface;
 use SensioLabs\DeprecationDetector\Violation\ViolationFilter\ViolationFilterInterface;
+use \ArrayIterator;
 
 class ViolationDetector
 {
@@ -34,11 +34,11 @@ class ViolationDetector
 
     /**
      * @param RuleSet             $ruleSet
-     * @param ParsedPhpFileFinder $files
+     * @param ArrayIterator       $files
      *
      * @return BaseViolation[]
      */
-    public function getViolations(RuleSet $ruleSet, ParsedPhpFileFinder $files)
+    public function getViolations(RuleSet $ruleSet, ArrayIterator $files)
     {
         $result = array();
         foreach ($files as $i => $file) {
