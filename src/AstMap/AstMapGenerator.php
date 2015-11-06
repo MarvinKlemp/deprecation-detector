@@ -60,13 +60,66 @@ class AstMapGenerator
                 $astMap->add(
                     new AstMapFile(
                         $file,
-                        $traverser->traverse($parser->parse($code))
+                        $ast = $traverser->traverse($parser->parse($code))
                     )
                 );
+
+                foreach (AstMapHelper::findClassLikeNodes($ast) as $classLikeNodes) {
+                    $astMap->setClassInherit(
+                        $classLikeNodes->namespacedName->toString(),
+                        AstMapHelper::findInheritances($classLikeNodes)
+                    );
+                }
+
             } catch (\PhpParser\Error $e) {
             }
         }
 
         gc_enable();
+
+        $this->flattenInheritanceDependencies($astMap);
+    }
+
+    private function flattenInheritanceDependencies(AstMap $astMap)
+    {
+
+        foreach ($astMap->getAllInherits() as $class => $inherits) {
+
+            $inerhitInerhits = [];
+
+            foreach ($inherits as $inherit) {
+                $inerhitInerhits =  array_merge($inerhitInerhits, $this->resolveDepsRecursive($inherit, $astMap));
+            }
+
+
+            $astMap->setFlattenClassInherit(
+                $class,
+                array_values(array_unique(array_filter($inerhitInerhits, function($v) use ($astMap, $class) {
+                    return !in_array($v, $astMap->getClassInherits($class));
+                })))
+            );
+        }
+    }
+
+    private function resolveDepsRecursive($class, AstMap $astMap, \ArrayObject $alreadyResolved = null)
+    {
+        if ($alreadyResolved == null) {
+            $alreadyResolved = new \ArrayObject();
+        }
+
+        // recursion detected
+        if (isset($alreadyResolved[$class])) {
+            return [];
+        }
+
+        $alreadyResolved[$class] = true;
+
+        $buffer = [];
+        foreach ($astMap->getClassInherits($class) as $dep) {
+            $buffer = array_merge($buffer, $this->resolveDepsRecursive($dep, $astMap, $alreadyResolved));
+            $buffer[] = $dep;
+        }
+
+        return array_values(array_unique($buffer));
     }
 }
