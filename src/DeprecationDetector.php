@@ -2,16 +2,21 @@
 
 namespace SensioLabs\DeprecationDetector;
 
+use SensioLabs\DeprecationDetector\AstMap\AstMapGenerator;
 use SensioLabs\DeprecationDetector\Console\Output\DefaultProgressOutput;
 use SensioLabs\DeprecationDetector\Finder\ParsedPhpFileFinder;
 use SensioLabs\DeprecationDetector\RuleSet\Loader\LoaderInterface;
-use SensioLabs\DeprecationDetector\TypeGuessing\AncestorResolver;
 use SensioLabs\DeprecationDetector\Violation\Violation;
 use SensioLabs\DeprecationDetector\Violation\ViolationDetector;
 use SensioLabs\DeprecationDetector\Violation\Renderer\RendererInterface;
 
 class DeprecationDetector
 {
+    /**
+     * @var AstMapGenerator
+     */
+    private $astMapGenerator;
+
     /**
      * @var LoaderInterface
      */
@@ -38,6 +43,7 @@ class DeprecationDetector
     private $output;
 
     /**
+     * @param AstMapGenerator       $astMapGenerator
      * @param LoaderInterface       $ruleSetLoader
      * @param ParsedPhpFileFinder   $deprecationFinder
      * @param ViolationDetector     $violationDetector
@@ -45,12 +51,14 @@ class DeprecationDetector
      * @param DefaultProgressOutput $output
      */
     public function __construct(
+        AstMapGenerator $astMapGenerator,
         LoaderInterface $ruleSetLoader,
         ParsedPhpFileFinder $deprecationFinder,
         ViolationDetector $violationDetector,
         RendererInterface $renderer,
         DefaultProgressOutput $output
     ) {
+        $this->astMapGenerator = $astMapGenerator;
         $this->ruleSetLoader = $ruleSetLoader;
         $this->deprecationFinder = $deprecationFinder;
         $this->violationDetector = $violationDetector;
@@ -71,6 +79,11 @@ class DeprecationDetector
         $this->output->startProgress();
 
         $this->output->startRuleSetGeneration();
+
+        // start RuleSetAstMapGeneration
+        $map = $this->astMapGenerator->generateAstMap($sourceArg);
+        // end RuleSetAstMapGeneration
+
         $ruleSet = $this->ruleSetLoader->loadRuleSet($ruleSetArg);
         $this->output->endRuleSetGeneration();
 

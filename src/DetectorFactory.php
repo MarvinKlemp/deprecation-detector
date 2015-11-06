@@ -4,6 +4,7 @@ namespace SensioLabs\DeprecationDetector;
 
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
+use SensioLabs\DeprecationDetector\AstMap\AstMapGenerator;
 use SensioLabs\DeprecationDetector\Configuration\Configuration;
 use SensioLabs\DeprecationDetector\Console\Output\DefaultProgressOutput;
 use SensioLabs\DeprecationDetector\Console\Output\VerboseProgressOutput;
@@ -118,7 +119,10 @@ class DetectorFactory
 
         $progressOutput = new DefaultProgressOutput($output, new Stopwatch());
 
+        $astMapGenerator = new AstMapGenerator();
+
         return new DeprecationDetector(
+            $astMapGenerator,
             $ruleSetLoader,
             $deprecationUsageFinder,
             $violationDetector,
