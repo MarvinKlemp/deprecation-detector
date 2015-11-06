@@ -2,8 +2,8 @@
 
 namespace SensioLabs\DeprecationDetector\RuleSet\Loader;
 
+use SensioLabs\DeprecationDetector\AstMap\AstMapRuleSetTraverser;
 use SensioLabs\DeprecationDetector\RuleSet\Cache;
-use SensioLabs\DeprecationDetector\RuleSet\DirectoryTraverser;
 
 /**
  * Class DirectoryLoader.
@@ -13,7 +13,7 @@ use SensioLabs\DeprecationDetector\RuleSet\DirectoryTraverser;
 class DirectoryLoader implements LoaderInterface
 {
     /**
-     * @var DirectoryTraverser
+     * @var AstMapRuleSetTraverser
      */
     protected $traverser;
 
@@ -23,10 +23,10 @@ class DirectoryLoader implements LoaderInterface
     protected $cache;
 
     /**
-     * @param DirectoryTraverser $traverser
+     * @param AstMapRuleSetTraverser $traverser
      * @param Cache              $cache
      */
-    public function __construct(DirectoryTraverser $traverser, Cache $cache)
+    public function __construct(AstMapRuleSetTraverser $traverser, Cache $cache)
     {
         $this->traverser = $traverser;
         $this->cache = $cache;

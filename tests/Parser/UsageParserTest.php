@@ -2,6 +2,7 @@
 
 namespace SensioLabs\DeprecationDetector\Tests\Parser;
 
+use Prophecy\Argument;
 use SensioLabs\DeprecationDetector\Parser\UsageParser;
 
 class UsageParserTest extends \PHPUnit_Framework_TestCase
@@ -40,6 +41,10 @@ class UsageParserTest extends \PHPUnit_Framework_TestCase
         $phpFileInfo->getContents()->willReturn('');
         $phpFileInfo = $phpFileInfo->reveal();
 
+        $astMapFile = $this->prophesize('SensioLabs\DeprecationDetector\AstMap\AstMapFile');
+        $astMapFile->code()->willReturn(array())->shouldBeCalled();
+        $astMapFile->updateCode(Argument::any())->shouldBeCalled();
+
         $violationVisitor = $this
             ->prophesize('SensioLabs\DeprecationDetector\Visitor\ViolationVisitorInterface')
             ->reveal();
@@ -61,6 +66,6 @@ class UsageParserTest extends \PHPUnit_Framework_TestCase
             $violationTraverser->reveal()
         );
 
-        $deprecationParser->parseFile($phpFileInfo);
+        $deprecationParser->parseFile($phpFileInfo, $astMapFile->reveal());
     }
 }

@@ -2,13 +2,14 @@
 
 namespace SensioLabs\DeprecationDetector;
 
+use SensioLabs\DeprecationDetector\AstMap\AstMapGenerator;
 use SensioLabs\DeprecationDetector\Console\Output\DefaultProgressOutput;
-use SensioLabs\DeprecationDetector\Finder\ParsedPhpFileFinder;
+use SensioLabs\DeprecationDetector\AstMap\AstMapUsageTraverser;
 use SensioLabs\DeprecationDetector\RuleSet\Loader\LoaderInterface;
-use SensioLabs\DeprecationDetector\TypeGuessing\AncestorResolver;
 use SensioLabs\DeprecationDetector\Violation\Violation;
 use SensioLabs\DeprecationDetector\Violation\ViolationDetector;
 use SensioLabs\DeprecationDetector\Violation\Renderer\RendererInterface;
+use \ArrayIterator;
 
 class DeprecationDetector
 {
@@ -18,9 +19,9 @@ class DeprecationDetector
     private $ruleSetLoader;
 
     /**
-     * @var ParsedPhpFileFinder
+     * @var AstMapUsageTraverser
      */
-    private $deprecationFinder;
+    private $astMapUsageTraverser;
 
     /**
      * @var ViolationDetector
@@ -38,24 +39,21 @@ class DeprecationDetector
     private $output;
 
     /**
-     * @param LoaderInterface       $ruleSetLoader
-     * @param AncestorResolver      $ancestorResolver
-     * @param ParsedPhpFileFinder   $deprecationFinder
-     * @param ViolationDetector     $violationDetector
-     * @param RendererInterface     $renderer
-     * @param DefaultProgressOutput $output
+     * @param LoaderInterface           $ruleSetLoader
+     * @param AstMapUsageTraverser      $astMapUsageTraverser
+     * @param ViolationDetector         $violationDetector
+     * @param RendererInterface         $renderer
+     * @param DefaultProgressOutput     $output
      */
     public function __construct(
         LoaderInterface $ruleSetLoader,
-        AncestorResolver $ancestorResolver,
-        ParsedPhpFileFinder $deprecationFinder,
+        AstMapUsageTraverser $astMapUsageTraverser,
         ViolationDetector $violationDetector,
         RendererInterface $renderer,
         DefaultProgressOutput $output
     ) {
         $this->ruleSetLoader = $ruleSetLoader;
-        $this->ancestorResolver = $ancestorResolver;
-        $this->deprecationFinder = $deprecationFinder;
+        $this->astMapUsageTraverser = $astMapUsageTraverser;
         $this->violationDetector = $violationDetector;
         $this->renderer = $renderer;
         $this->output = $output;
@@ -72,30 +70,22 @@ class DeprecationDetector
     public function checkForDeprecations($sourceArg, $ruleSetArg)
     {
         $this->output->startProgress();
-
         $this->output->startRuleSetGeneration();
         $ruleSet = $this->ruleSetLoader->loadRuleSet($ruleSetArg);
         $this->output->endRuleSetGeneration();
 
+
         $this->output->startUsageDetection();
-
-        // TODO: Move to AncestorResolver not hard coded
-        $lib = (is_dir($ruleSetArg) ? $ruleSetArg : realpath('vendor'));
-        $this->ancestorResolver->setSourcePaths(array(
-            $sourceArg,
-            $lib,
-        ));
-
-        /** @var ParsedPhpFileFinder $files */
-        $files = $this->deprecationFinder->in($sourceArg);
+        /** @var ArrayIterator $files */
+        $files = $this->astMapUsageTraverser->traverse($sourceArg);
         $violations = $this->violationDetector->getViolations($ruleSet, $files);
         $this->output->endUsageDetection();
 
         $this->output->startOutputRendering();
         $this->renderer->renderViolations($violations);
-        if ($files->hasParserErrors()) {
+        /*if ($files->hasParserErrors()) {
             $this->renderer->renderParserErrors($files->getParserErrors());
-        }
+        }*/
         $this->output->endOutputRendering();
 
         $this->output->endProgress($files->count(), count($violations));
