@@ -10,7 +10,7 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
     public function testClassIsInitializable()
     {
         $ruleSetLoader = $this->prophesize('SensioLabs\DeprecationDetector\RuleSet\Loader\LoaderInterface');
-        $deprecationFinder = $this->prophesize('SensioLabs\DeprecationDetector\Finder\ParsedPhpFileFinder');
+        $deprecationUsageFinder = $this->prophesize('SensioLabs\DeprecationDetector\Finder\DeprecationUsageFinder');
         $violationDetector = $this->prophesize('SensioLabs\DeprecationDetector\Violation\ViolationDetector');
         $renderer = $this->prophesize('SensioLabs\DeprecationDetector\Violation\Renderer\RendererInterface');
         $defaultOutput = $this->prophesize(
@@ -19,7 +19,7 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
 
         $detector = new DeprecationDetector(
             $ruleSetLoader->reveal(),
-            $deprecationFinder->reveal(),
+            $deprecationUsageFinder->reveal(),
             $violationDetector->reveal(),
             $renderer->reveal(),
             $defaultOutput->reveal()
@@ -35,14 +35,16 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
         $fileCount = 10;
         $violationCount = 2;
 
+        $files = $this->prophesize('\ArrayIterator');
+
         $ruleSet = $this->prophesize('SensioLabs\DeprecationDetector\RuleSet\RuleSet');
         $ruleSetLoader = $this->prophesize('SensioLabs\DeprecationDetector\RuleSet\Loader\LoaderInterface');
         $ruleSetLoader->loadRuleSet($ruleSetArg)->willReturn($ruleSet->reveal());
 
-        $deprecationFinder = $this->prophesize('SensioLabs\DeprecationDetector\Finder\ParsedPhpFileFinder');
-        $deprecationFinder->in($sourceArg)->willReturn($deprecationFinder->reveal());
-        $deprecationFinder->hasParserErrors()->willReturn(false);
-        $deprecationFinder->count()->willReturn($fileCount);
+        $deprecationUsageFinder = $this->prophesize('SensioLabs\DeprecationDetector\Finder\DeprecationUsageFinder');
+        $deprecationUsageFinder->find($sourceArg)->willReturn($files->reveal());
+        //$deprecationFinder->hasParserErrors()->willReturn(false);
+        $files->count()->willReturn($fileCount);
 
         $aViolation = $this->prophesize('SensioLabs\DeprecationDetector\Violation\Violation');
         $anotherViolation = $this->prophesize('SensioLabs\DeprecationDetector\Violation\Violation');
@@ -52,7 +54,7 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
         );
 
         $violationDetector = $this->prophesize('SensioLabs\DeprecationDetector\Violation\ViolationDetector');
-        $violationDetector->getViolations($ruleSet->reveal(), $deprecationFinder->reveal())->willReturn($violations);
+        $violationDetector->getViolations($ruleSet->reveal(), $files->reveal())->willReturn($violations);
 
         $renderer = $this->prophesize('SensioLabs\DeprecationDetector\Violation\Renderer\RendererInterface');
         $renderer->renderViolations($violations)->shouldBeCalled();
@@ -72,7 +74,7 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
 
         $detector = new DeprecationDetector(
             $ruleSetLoader->reveal(),
-            $deprecationFinder->reveal(),
+            $deprecationUsageFinder->reveal(),
             $violationDetector->reveal(),
             $renderer->reveal(),
             $defaultOutput->reveal()
@@ -89,15 +91,17 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
         $fileCount = 10;
         $violationCount = 2;
 
+        $files = $this->prophesize('\ArrayIterator');
+
         $ruleSet = $this->prophesize('SensioLabs\DeprecationDetector\RuleSet\RuleSet');
         $ruleSetLoader = $this->prophesize('SensioLabs\DeprecationDetector\RuleSet\Loader\LoaderInterface');
         $ruleSetLoader->loadRuleSet($ruleSetArg)->willReturn($ruleSet->reveal());
 
-        $deprecationFinder = $this->prophesize('SensioLabs\DeprecationDetector\Finder\ParsedPhpFileFinder');
-        $deprecationFinder->in($sourceArg)->willReturn($deprecationFinder->reveal());
-        $deprecationFinder->hasParserErrors()->willReturn(true);
-        $deprecationFinder->count()->willReturn($fileCount);
-        $deprecationFinder->getParserErrors()->willReturn($parserErrors);
+        $deprecationUsageFinder = $this->prophesize('SensioLabs\DeprecationDetector\Finder\DeprecationUsageFinder');
+        $deprecationUsageFinder->find($sourceArg)->willReturn($files->reveal());
+        //$deprecationUsageFinder->hasParserErrors()->willReturn(true);
+        $files->count()->willReturn($fileCount);
+        //$deprecationUsageFinder->getParserErrors()->willReturn($parserErrors);
 
         $aViolation = $this->prophesize('SensioLabs\DeprecationDetector\Violation\Violation');
         $anotherViolation = $this->prophesize('SensioLabs\DeprecationDetector\Violation\Violation');
@@ -107,11 +111,11 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
         );
 
         $violationDetector = $this->prophesize('SensioLabs\DeprecationDetector\Violation\ViolationDetector');
-        $violationDetector->getViolations($ruleSet->reveal(), $deprecationFinder->reveal())->willReturn($violations);
+        $violationDetector->getViolations($ruleSet->reveal(), $files->reveal())->willReturn($violations);
 
         $renderer = $this->prophesize('SensioLabs\DeprecationDetector\Violation\Renderer\RendererInterface');
         $renderer->renderViolations($violations)->shouldBeCalled();
-        $renderer->renderParserErrors($parserErrors)->shouldBeCalled();
+        //$renderer->renderParserErrors($parserErrors)->shouldBeCalled();
 
         $defaultOutput = $this->prophesize(
             'SensioLabs\DeprecationDetector\Console\Output\DefaultProgressOutput'
@@ -127,7 +131,7 @@ class DeprecationDetectorTest extends \PHPUnit_Framework_TestCase
 
         $detector = new DeprecationDetector(
             $ruleSetLoader->reveal(),
-            $deprecationFinder->reveal(),
+            $deprecationUsageFinder->reveal(),
             $violationDetector->reveal(),
             $renderer->reveal(),
             $defaultOutput->reveal()

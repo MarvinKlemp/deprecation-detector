@@ -29,6 +29,8 @@ class DeprecationParserTest extends \PHPUnit_Framework_TestCase
     public function testParseFile()
     {
         $phpFileInfo = $this->prophesize('SensioLabs\DeprecationDetector\FileInfo\PhpFileInfo')->reveal();
+        $astMapFile = $this->prophesize('SensioLabs\DeprecationDetector\AstMap\AstMapFile');
+        $astMapFile->code()->willReturn(array())->shouldBeCalled();
 
         $visitor = $this->prophesize('SensioLabs\DeprecationDetector\Visitor\DeprecationVisitorInterface');
         $visitor->setPhpFileInfo($phpFileInfo)->shouldBeCalled();
@@ -44,6 +46,6 @@ class DeprecationParserTest extends \PHPUnit_Framework_TestCase
             array($visitor->reveal(), $anotherVisitor->reveal()),
             $baseTraverser->reveal()
         );
-        $deprecationParser->parseFile($phpFileInfo);
+        $deprecationParser->parseFile($phpFileInfo, $astMapFile->reveal());
     }
 }
