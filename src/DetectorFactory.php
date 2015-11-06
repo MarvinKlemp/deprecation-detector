@@ -4,19 +4,17 @@ namespace SensioLabs\DeprecationDetector;
 
 use PhpParser\NodeTraverser;
 use SensioLabs\DeprecationDetector\AstMap\AstMapGenerator;
+use SensioLabs\DeprecationDetector\AstMap\AstMapRuleSetTraverser;
+use SensioLabs\DeprecationDetector\AstMap\AstMapUsageTraverser;
 use SensioLabs\DeprecationDetector\Configuration\Configuration;
 use SensioLabs\DeprecationDetector\Console\Output\DefaultProgressOutput;
 use SensioLabs\DeprecationDetector\Console\Output\VerboseProgressOutput;
-use SensioLabs\DeprecationDetector\Finder\DeprecationUsageFinder;
-use SensioLabs\DeprecationDetector\Finder\ParsedPhpFileFinder;
 use SensioLabs\DeprecationDetector\Parser\DeprecationParser;
 use SensioLabs\DeprecationDetector\Parser\UsageParser;
 use SensioLabs\DeprecationDetector\RuleSet\Cache;
-use SensioLabs\DeprecationDetector\RuleSet\Loader\ComposerLoader;
 use SensioLabs\DeprecationDetector\RuleSet\Loader\DirectoryLoader;
 use SensioLabs\DeprecationDetector\RuleSet\Loader\FileLoader;
 use SensioLabs\DeprecationDetector\RuleSet\Loader\LoaderInterface;
-use SensioLabs\DeprecationDetector\RuleSet\DirectoryTraverser;
 use SensioLabs\DeprecationDetector\TypeGuessing\ConstructorResolver\ConstructorResolver;
 use SensioLabs\DeprecationDetector\TypeGuessing\ConstructorResolver\Visitor\ConstructorResolverVisitor;
 use SensioLabs\DeprecationDetector\TypeGuessing\SymbolTable\ComposedResolver;
@@ -77,8 +75,7 @@ class DetectorFactory
     public function create(Configuration $configuration, OutputInterface $output)
     {
         $this->symbolTable = new SymbolTable();
-        $ruleSetAstMapGenerator = new AstMapGenerator();
-        $violationAstMapGenerator = new AstMapGenerator();
+        $astMapGenerator = new AstMapGenerator();
 
         $deprecationProgressOutput = new VerboseProgressOutput(
             new ProgressBar($output),
@@ -86,8 +83,8 @@ class DetectorFactory
             'Deprecation detection'
         );
         $deprecationUsageParser = $this->getUsageParser($configuration);
-        $deprecationUsageFinder = new DeprecationUsageFinder(
-            $violationAstMapGenerator,
+        $deprecationUsageFinder = new AstMapUsageTraverser(
+            $astMapGenerator,
             $deprecationUsageParser
         );
 
@@ -97,8 +94,8 @@ class DetectorFactory
             'RuleSet generation'
         );
         $ruleSetDeprecationParser = $this->getDeprecationParser();
-        $deprecationDirectoryTraverser = new DirectoryTraverser(
-            $ruleSetAstMapGenerator,
+        $astMapRuleSetTraverser = new AstMapRuleSetTraverser(
+            $astMapGenerator,
             $ruleSetDeprecationParser
         );
 
@@ -106,7 +103,7 @@ class DetectorFactory
 
         $renderer = $this->getRenderer($configuration, $output);
 
-        $ruleSetLoader = $this->getRuleSetLoader($deprecationDirectoryTraverser, $configuration);
+        $ruleSetLoader = $this->getRuleSetLoader($astMapRuleSetTraverser, $configuration);
 
         $progressOutput = new DefaultProgressOutput($output, new Stopwatch());
 
@@ -304,12 +301,12 @@ class DetectorFactory
      */
 
     /**
-     * @param DirectoryTraverser $traverser
+     * @param AstMapRuleSetTraverser $traverser
      * @param Configuration      $configuration
      *
      * @return LoaderInterface
      */
-    private function getRuleSetLoader(DirectoryTraverser $traverser, Configuration $configuration)
+    private function getRuleSetLoader(AstMapRuleSetTraverser $traverser, Configuration $configuration)
     {
         $ruleSetCache = new Cache(new Filesystem());
 
@@ -321,8 +318,6 @@ class DetectorFactory
 
         if (is_dir($configuration->ruleSet())) {
             $loader = new DirectoryLoader($traverser, $ruleSetCache);
-        } elseif ('composer.lock' === basename($configuration->ruleSet())) {
-            $loader = new ComposerLoader($traverser, $ruleSetCache);
         } else {
             $loader = new FileLoader();
         }

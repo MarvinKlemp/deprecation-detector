@@ -1,15 +1,12 @@
 <?php
 
-namespace SensioLabs\DeprecationDetector\Finder;
+namespace SensioLabs\DeprecationDetector\AstMap;
 
-use SensioLabs\DeprecationDetector\AstMap\AstMapFile;
-use SensioLabs\DeprecationDetector\AstMap\AstMapGenerator;
 use SensioLabs\DeprecationDetector\FileInfo\PhpFileInfo;
 use SensioLabs\DeprecationDetector\Parser\UsageParser;
 use \ArrayIterator;
-use \Iterator;
 
-class DeprecationUsageFinder
+class AstMapUsageTraverser
 {
     /**
      * @var AstMapGenerator
@@ -32,7 +29,7 @@ class DeprecationUsageFinder
      * @param string $path
      * @return ArrayIterator
      */
-    public function find($path)
+    public function traverse($path)
     {
         $astMap = $this->astMapGenerator->generateAstMap($path);
         $files = new ArrayIterator();

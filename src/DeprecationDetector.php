@@ -2,8 +2,9 @@
 
 namespace SensioLabs\DeprecationDetector;
 
+use SensioLabs\DeprecationDetector\AstMap\AstMapGenerator;
 use SensioLabs\DeprecationDetector\Console\Output\DefaultProgressOutput;
-use SensioLabs\DeprecationDetector\Finder\DeprecationUsageFinder;
+use SensioLabs\DeprecationDetector\AstMap\AstMapUsageTraverser;
 use SensioLabs\DeprecationDetector\RuleSet\Loader\LoaderInterface;
 use SensioLabs\DeprecationDetector\Violation\Violation;
 use SensioLabs\DeprecationDetector\Violation\ViolationDetector;
@@ -18,9 +19,9 @@ class DeprecationDetector
     private $ruleSetLoader;
 
     /**
-     * @var DeprecationUsageFinder
+     * @var AstMapUsageTraverser
      */
-    private $deprecationUsageFinder;
+    private $astMapUsageTraverser;
 
     /**
      * @var ViolationDetector
@@ -39,20 +40,20 @@ class DeprecationDetector
 
     /**
      * @param LoaderInterface           $ruleSetLoader
-     * @param DeprecationUsageFinder    $deprecationUsageFinder
+     * @param AstMapUsageTraverser      $astMapUsageTraverser
      * @param ViolationDetector         $violationDetector
      * @param RendererInterface         $renderer
      * @param DefaultProgressOutput     $output
      */
     public function __construct(
         LoaderInterface $ruleSetLoader,
-        DeprecationUsageFinder $deprecationUsageFinder,
+        AstMapUsageTraverser $astMapUsageTraverser,
         ViolationDetector $violationDetector,
         RendererInterface $renderer,
         DefaultProgressOutput $output
     ) {
         $this->ruleSetLoader = $ruleSetLoader;
-        $this->deprecationUsageFinder = $deprecationUsageFinder;
+        $this->astMapUsageTraverser = $astMapUsageTraverser;
         $this->violationDetector = $violationDetector;
         $this->renderer = $renderer;
         $this->output = $output;
@@ -69,7 +70,6 @@ class DeprecationDetector
     public function checkForDeprecations($sourceArg, $ruleSetArg)
     {
         $this->output->startProgress();
-
         $this->output->startRuleSetGeneration();
         $ruleSet = $this->ruleSetLoader->loadRuleSet($ruleSetArg);
         $this->output->endRuleSetGeneration();
@@ -77,7 +77,7 @@ class DeprecationDetector
 
         $this->output->startUsageDetection();
         /** @var ArrayIterator $files */
-        $files = $this->deprecationUsageFinder->find($sourceArg);
+        $files = $this->astMapUsageTraverser->traverse($sourceArg);
         $violations = $this->violationDetector->getViolations($ruleSet, $files);
         $this->output->endUsageDetection();
 

@@ -1,13 +1,12 @@
 <?php
 
-namespace SensioLabs\DeprecationDetector\RuleSet;
+namespace SensioLabs\DeprecationDetector\AstMap;
 
-use SensioLabs\DeprecationDetector\AstMap\AstMapFile;
-use SensioLabs\DeprecationDetector\AstMap\AstMapGenerator;
 use SensioLabs\DeprecationDetector\FileInfo\PhpFileInfo;
 use SensioLabs\DeprecationDetector\Parser\DeprecationParser;
+use SensioLabs\DeprecationDetector\RuleSet\RuleSet;
 
-class DirectoryTraverser
+class AstMapRuleSetTraverser
 {
     /**
      * @var AstMapGenerator
