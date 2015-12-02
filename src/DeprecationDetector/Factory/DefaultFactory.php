@@ -99,7 +99,7 @@ class DefaultFactory implements FactoryInterface
             ->exclude('Tests')
             ->exclude('Test');
 
-        $this->ancestorResolver = new AncestorResolver($deprecationUsageParser, $deprecationUsageFinder);
+        $this->ancestorResolver = new AncestorResolver($deprecationUsageParser);
 
         $ruleSetProgressOutput = new VerboseProgressOutput(
             new ProgressBar($output),
