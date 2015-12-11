@@ -63,14 +63,17 @@ class ConsoleOutputRenderer implements RendererInterface
 
         $table->render();
 
-        $this->output->writeln('<error>Your project contains invalid code:</error>');
-        foreach ($errors as $error) {
-            $this->output->writeln(
-                sprintf(
-                    '<error>%s</error>',
-                    $error->getRawMessage()
-                )
-            );
+        if (count($errors) > 0) {
+            $this->output->writeln('<error>Your project contains invalid code:</error>');
+
+            foreach ($errors as $error) {
+                $this->output->writeln(
+                    sprintf(
+                        '<error>%s</error>',
+                        $error->getRawMessage()
+                    )
+                );
+            }
         }
     }
 
