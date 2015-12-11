@@ -21,12 +21,11 @@ class CheckCommand extends Command
             ->setName('check')
             ->setDefinition(
                 array(
-                    new InputArgument('source', InputArgument::OPTIONAL, 'The path to the source files', 'src/'),
+                    new InputArgument('source', InputArgument::REQUIRED, 'The path to the source files'),
                     new InputArgument(
                         'ruleset',
-                        InputArgument::OPTIONAL,
-                        'The path to the composer.lock file, a rule set or source directory',
-                        'composer.lock'
+                        InputArgument::REQUIRED,
+                        'The path to the composer.lock file, a rule set or source directory'
                     ),
                     new InputOption(
                         'container-cache',
