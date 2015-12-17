@@ -29,6 +29,7 @@ use SensioLabs\DeprecationDetector\TypeGuessing\SymbolTable\Resolver\VariableAss
 use SensioLabs\DeprecationDetector\TypeGuessing\SymbolTable\SymbolTable;
 use SensioLabs\DeprecationDetector\TypeGuessing\SymbolTable\Visitor\SymbolTableVariableResolverVisitor;
 use SensioLabs\DeprecationDetector\TypeGuessing\Symfony\ContainerReader;
+use SensioLabs\DeprecationDetector\TypeGuessing\Symfony\Visitor\FindSymfonyServices;
 use SensioLabs\DeprecationDetector\Violation\Renderer\ConsoleOutputRenderer;
 use SensioLabs\DeprecationDetector\Violation\Renderer\Html\Renderer;
 use SensioLabs\DeprecationDetector\Violation\Renderer\Html\RendererFactory;
@@ -217,6 +218,7 @@ class DetectorFactory
             new FindMethodCalls(),
             new FindMethodDefinitions(),
             new FindStaticMethodCalls(),
+            new FindSymfonyServices(),
         );
     }
 

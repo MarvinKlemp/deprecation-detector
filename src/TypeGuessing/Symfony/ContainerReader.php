@@ -70,6 +70,15 @@ class ContainerReader
     }
 
     /**
+     * @param int $id
+     * @return bool
+     */
+    public function isDeprecated($id)
+    {
+        return $this->container->findDefinition($id)->isDeprecated();
+    }
+
+    /**
      * @param $name
      * @param $args
      *
