@@ -6,13 +6,12 @@ use PhpParser\Lexer\Emulative;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
-use PHPUnit_Framework_TestCase;
 use SensioLabs\DeprecationDetector\FileInfo\PhpFileInfo;
 use SensioLabs\DeprecationDetector\FileInfo\Usage\TypeHintUsage;
 use SensioLabs\DeprecationDetector\Visitor\Usage\FindArguments;
 use Symfony\Component\Finder\SplFileInfo;
 
-class FindArgumentsTest extends PHPUnit_Framework_TestCase
+class FindArgumentsTest extends FindTestCase
 {
     public function testMethodsOfClasses()
     {
@@ -30,7 +29,18 @@ class Bar
 }
 EOC;
         $splFileInfo = $this->prophesize(SplFileInfo::class);
-        $usages = $this->parseFileAndReturnClassUsages($file = PhpFileInfo::create($splFileInfo->reveal()), $source);
+        $this->parsePhpFileFromStringAndTraverseWithVisitor(
+            $file = PhpFileInfo::create($splFileInfo->reveal()),
+            $source,
+            new FindArguments()
+        );
+
+        $usages = array_map(
+            function (TypeHintUsage $usage) {
+                return $usage->name().'::'.$usage->getLineNumber();
+            },
+            $file->typeHintUsages()
+        );
 
         $this->assertCount(3, $usages);
         $this->assertContains('Foo\Foo::6', $usages);
@@ -50,7 +60,18 @@ $x = function(A $a) {};
 
 EOC;
         $splFileInfo = $this->prophesize(SplFileInfo::class);
-        $usages = $this->parseFileAndReturnClassUsages($file = PhpFileInfo::create($splFileInfo->reveal()), $source);
+        $this->parsePhpFileFromStringAndTraverseWithVisitor(
+            $file = PhpFileInfo::create($splFileInfo->reveal()),
+            $source,
+            new FindArguments()
+        );
+
+        $usages = array_map(
+            function (TypeHintUsage $usage) {
+                return $usage->name().'::'.$usage->getLineNumber();
+            },
+            $file->typeHintUsages()
+        );
 
         $this->assertCount(4, $usages);
         $this->assertContains('A::4', $usages);
@@ -73,35 +94,22 @@ class Bar
 }
 EOC;
         $splFileInfo = $this->prophesize(SplFileInfo::class);
-        $usages = $this->parseFileAndReturnClassUsages($file = PhpFileInfo::create($splFileInfo->reveal()), $source);
+        $this->parsePhpFileFromStringAndTraverseWithVisitor(
+            $file = PhpFileInfo::create($splFileInfo->reveal()),
+            $source,
+            new FindArguments()
+        );
+
+        $usages = array_map(
+            function (TypeHintUsage $usage) {
+                return $usage->name().'::'.$usage->getLineNumber();
+            },
+            $file->typeHintUsages()
+        );
 
         $this->assertCount(2, $usages);
         $this->assertContains('A::7', $usages);
         $this->assertContains('Foo\A::7', $usages);
     }
 
-    /**
-     * @param PhpFileInfo $phpFileInfo
-     * @param $source
-     *
-     * @return array
-     */
-    private function parseFileAndReturnClassUsages(PhpFileInfo $phpFileInfo, $source)
-    {
-        $traverser = new NodeTraverser();
-        $traverser->addVisitor(new NameResolver());
-        $findArguments = new FindArguments();
-        $traverser->addVisitor($findArguments->setPhpFileInfo($phpFileInfo));
-        $parser = new Parser(new Emulative());
-        $traverser->traverse($parser->parse($source));
-
-        $usages = array_map(
-            function (TypeHintUsage $usage) {
-                return $usage->name().'::'.$usage->getLineNumber();
-            },
-            $phpFileInfo->typeHintUsages()
-        );
-
-        return $usages;
-    }
 }

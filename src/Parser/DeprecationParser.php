@@ -5,11 +5,17 @@ namespace SensioLabs\DeprecationDetector\Parser;
 use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
 use PhpParser\Parser;
+use PhpParser\ParserFactory;
 use SensioLabs\DeprecationDetector\FileInfo\PhpFileInfo;
 use SensioLabs\DeprecationDetector\Visitor\DeprecationVisitorInterface;
 
-class DeprecationParser extends Parser implements ParserInterface
+class DeprecationParser implements ParserInterface
 {
+    /**
+     * @var Parser
+     */
+    private $parser;
+
     /**
      * @var NodeTraverser
      */
@@ -21,14 +27,14 @@ class DeprecationParser extends Parser implements ParserInterface
     protected $deprecationVisitors = [];
 
     /**
+     * @param Parser                        $parser
      * @param DeprecationVisitorInterface[] $visitors
      * @param NodeTraverser                 $baseTraverser
      */
-    public function __construct(array $visitors, NodeTraverser $baseTraverser)
+    public function __construct(Parser $parser, array $visitors, NodeTraverser $baseTraverser)
     {
-        parent::__construct(new Lexer());
+        $this->parser = $parser;
         $this->traverser = $baseTraverser;
-
         array_map([$this, 'addDeprecationVisitor'], $visitors);
     }
 
@@ -52,7 +58,7 @@ class DeprecationParser extends Parser implements ParserInterface
             $visitor->setPhpFileInfo($phpFileInfo);
         }
 
-        $this->traverser->traverse($this->parse($phpFileInfo->getContents()));
+        $this->traverser->traverse($this->parser->parse($phpFileInfo->getContents()));
 
         return $phpFileInfo;
     }
