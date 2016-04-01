@@ -4,6 +4,7 @@ namespace SensioLabs\DeprecationDetector;
 
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
+use PhpParser\ParserFactory;
 use SensioLabs\DeprecationDetector\Configuration\Configuration;
 use SensioLabs\DeprecationDetector\Console\Output\DefaultProgressOutput;
 use SensioLabs\DeprecationDetector\Console\Output\VerboseProgressOutput;
@@ -154,6 +155,7 @@ class DetectorFactory
     private function getUsageParser(Configuration $configuration)
     {
         return new UsageParser(
+            (new ParserFactory())->create(ParserFactory::PREFER_PHP7),
             $this->getStaticAnalysisVisitors($configuration),
             $this->getViolationVisitors(),
             $this->getBaseTraverser(),
@@ -336,6 +338,7 @@ class DetectorFactory
     private function getDeprecationParser()
     {
         return new DeprecationParser(
+            (new ParserFactory())->create(ParserFactory::PREFER_PHP7),
             [
                 new FindDeprecatedTagsVisitor(),
             ],

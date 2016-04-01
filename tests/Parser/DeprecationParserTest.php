@@ -3,6 +3,7 @@
 namespace SensioLabs\DeprecationDetector\Tests\Parser;
 
 use PhpParser\NodeTraverser;
+use PhpParser\Parser;
 use Prophecy\Argument;
 use SensioLabs\DeprecationDetector\FileInfo\PhpFileInfo;
 use SensioLabs\DeprecationDetector\Parser\DeprecationParser;
@@ -12,12 +13,16 @@ class DeprecationParserTest extends \PHPUnit_Framework_TestCase
 {
     public function testClassIsInitializable()
     {
-        $deprecationParser = new DeprecationParser([], $this->prophesize(NodeTraverser::class)->reveal());
+        $deprecationParser = new DeprecationParser(
+            $this->prophesize(Parser::class)->reveal(),
+            [],
+            $this->prophesize(NodeTraverser::class)->reveal()
+        );
 
         $this->assertInstanceOf(DeprecationParser::class, $deprecationParser);
     }
 
-    public function testAddDeprecationVisitor()
+    public function testAddDeprecationVisitorCallsAddVisitor()
     {
         $visitor = $this->prophesize(DeprecationVisitorInterface::class);
         $visitor = $visitor->reveal();
@@ -25,13 +30,20 @@ class DeprecationParserTest extends \PHPUnit_Framework_TestCase
         $baseTraverser = $this->prophesize(NodeTraverser::class);
         $baseTraverser->addVisitor($visitor)->shouldBeCalled();
 
-        $deprecationParser = new DeprecationParser([], $baseTraverser->reveal());
+        $deprecationParser = new DeprecationParser(
+            $this->prophesize(Parser::class)->reveal(),
+            [],
+            $baseTraverser->reveal()
+        );
         $deprecationParser->addDeprecationVisitor($visitor);
     }
 
     public function testParseFile()
     {
-        $phpFileInfo = $this->prophesize(PhpFileInfo::class)->reveal();
+        $contents = '';
+        $phpFileInfo = $this->prophesize(PhpFileInfo::class);
+        $phpFileInfo->getContents()->shouldBeCalled()->willReturn($contents);
+        $phpFileInfo = $phpFileInfo->reveal();
 
         $visitor = $this->prophesize(DeprecationVisitorInterface::class);
         $visitor->setPhpFileInfo($phpFileInfo)->shouldBeCalled();
@@ -43,7 +55,11 @@ class DeprecationParserTest extends \PHPUnit_Framework_TestCase
         $baseTraverser->addVisitor($anotherVisitor)->shouldBeCalled();
         $baseTraverser->traverse(Argument::any())->shouldBeCalled();
 
+        $parser = $this->prophesize(Parser::class);
+        $parser->parse($contents)->shouldBeCalled()->willReturn([]);
+
         $deprecationParser = new DeprecationParser(
+            $parser->reveal(),
             [$visitor->reveal(), $anotherVisitor->reveal()],
             $baseTraverser->reveal()
         );

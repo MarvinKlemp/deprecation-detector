@@ -7,6 +7,7 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
+use PhpParser\ParserFactory;
 use Prophecy\Argument;
 use SensioLabs\DeprecationDetector\FileInfo\PhpFileInfo;
 use SensioLabs\DeprecationDetector\FileInfo\Usage\MethodUsage;
@@ -97,7 +98,7 @@ EOC;
      */
     private function traverseSourceAndReturnContents($source, PhpFileInfo $phpFileInfo)
     {
-        $parser = new Parser(new Emulative());
+        $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP5);
         $nodes = $parser->parse($source);
 
         $staticAnalysisTraverser = new NodeTraverser();
